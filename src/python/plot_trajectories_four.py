@@ -3,7 +3,7 @@ from matplotlib.ticker import ScalarFormatter
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 
-def plot_trajectories(filename="/home/dolev/Desktop/Research/OMPL_drones/build/solution_path.txt", w=2.0, d=2.0, h=1.0, l=1.0):
+def plot_trajectories(filename="/home/user_136/Desktop/Project-A/build/solution_path.txt", w=2.0, d=2.0, h=1.0, l=1.0):
     # Load data from the solution path file
     data = np.loadtxt(filename)
     # print(f"Quaternion raw values: {data[:, [6, 3, 4, 5]]}")

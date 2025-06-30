@@ -1,0 +1,12 @@
+
+dynamics: payload_four_drones_v0
+start: [-10.0, -40.0, 20.0, 0.0, 0.0, 0.0, 1.0]
+goal: [46.6868, -25.2859, 26.948, -1.51291e-09, 1.35366e-10, 0.0891173, 0.996021]
+dt: 0.1
+T: 133
+integrator: euler
+dynamics: true
+cost_weights:
+  goal: 10.0
+  smooth: 1.0
+  control: 0.1

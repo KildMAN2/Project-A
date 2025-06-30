@@ -1,0 +1,76 @@
+{
+  "original_ompl": {
+    "shortest_path": {
+      "success": true,
+      "original_cost": 17.228,
+      "optimized_cost": 14.96,
+      "improvement_percent": 13.164615741815652,
+      "original_waypoints": 52,
+      "optimized_waypoints": 2,
+      "waypoint_reduction_percent": 96.15384615384616,
+      "execution_time": 5.50013279914856,
+      "output_file": "/home/user_136/Desktop/Project-A/build/multi_test_original_ompl_shortest_path.yaml",
+      "plot_file": "/home/user_136/Desktop/Project-A/build/multi_test_original_ompl_shortest_path.png"
+    },
+    "energy_efficient": {
+      "success": true,
+      "original_cost": 17.228,
+      "optimized_cost": 14.961,
+      "improvement_percent": 13.158811237520322,
+      "original_waypoints": 52,
+      "optimized_waypoints": 26,
+      "waypoint_reduction_percent": 50.0,
+      "execution_time": 17.315340042114258,
+      "output_file": "/home/user_136/Desktop/Project-A/build/multi_test_original_ompl_energy_efficient.yaml",
+      "plot_file": "/home/user_136/Desktop/Project-A/build/multi_test_original_ompl_energy_efficient.png"
+    },
+    "smoothest": {
+      "success": true,
+      "original_cost": 17.228,
+      "optimized_cost": 14.961,
+      "improvement_percent": 13.158811237520322,
+      "original_waypoints": 52,
+      "optimized_waypoints": 26,
+      "waypoint_reduction_percent": 50.0,
+      "execution_time": 17.509565353393555,
+      "output_file": "/home/user_136/Desktop/Project-A/build/multi_test_original_ompl_smoothest.yaml",
+      "plot_file": "/home/user_136/Desktop/Project-A/build/multi_test_original_ompl_smoothest.png"
+    },
+    "time_optimal": {
+      "success": true,
+      "original_cost": 17.228,
+      "optimized_cost": 14.96,
+      "improvement_percent": 13.164615741815652,
+      "original_waypoints": 52,
+      "optimized_waypoints": 2,
+      "waypoint_reduction_percent": 96.15384615384616,
+      "execution_time": 4.602823495864868,
+      "output_file": "/home/user_136/Desktop/Project-A/build/multi_test_original_ompl_time_optimal.yaml",
+      "plot_file": "/home/user_136/Desktop/Project-A/build/multi_test_original_ompl_time_optimal.png"
+    },
+    "balanced": {
+      "success": true,
+      "original_cost": 17.228,
+      "optimized_cost": 14.961,
+      "improvement_percent": 13.158811237520322,
+      "original_waypoints": 52,
+      "optimized_waypoints": 26,
+      "waypoint_reduction_percent": 50.0,
+      "execution_time": 19.77917194366455,
+      "output_file": "/home/user_136/Desktop/Project-A/build/multi_test_original_ompl_balanced.yaml",
+      "plot_file": "/home/user_136/Desktop/Project-A/build/multi_test_original_ompl_balanced.png"
+    },
+    "conservative": {
+      "success": true,
+      "original_cost": 17.228,
+      "optimized_cost": 14.961,
+      "improvement_percent": 13.158811237520322,
+      "original_waypoints": 52,
+      "optimized_waypoints": 26,
+      "waypoint_reduction_percent": 50.0,
+      "execution_time": 17.526641845703125,
+      "output_file": "/home/user_136/Desktop/Project-A/build/multi_test_original_ompl_conservative.yaml",
+      "plot_file": "/home/user_136/Desktop/Project-A/build/multi_test_original_ompl_conservative.png"
+    }
+  }
+}

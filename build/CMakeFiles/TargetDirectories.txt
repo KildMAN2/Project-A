@@ -1,0 +1,3 @@
+/home/user_136/Desktop/Project-A/build/CMakeFiles/PayloadFourDrones.dir
+/home/user_136/Desktop/Project-A/build/CMakeFiles/edit_cache.dir
+/home/user_136/Desktop/Project-A/build/CMakeFiles/rebuild_cache.dir

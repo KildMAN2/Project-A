@@ -1,0 +1,184 @@
+T: 200
+dt: 0.1
+dynamics: true
+goal:
+- 30.0
+- 35.0
+- 30.0
+- 0.0
+- 0.0
+- 0.0
+- 1.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+integrator: euler
+model: payload4drones
+obstacles:
+- center:
+  - -15
+  - -20
+  - 25
+  height: 12
+  radius: 3
+  type: cylinder
+- center:
+  - -5
+  - -15
+  - 25
+  height: 16
+  radius: 4
+  type: cylinder
+- center:
+  - 5
+  - -10
+  - 25
+  height: 14
+  radius: 3
+  type: cylinder
+- center:
+  - 15
+  - -5
+  - 25
+  height: 18
+  radius: 5
+  type: cylinder
+- center:
+  - 20
+  - 5
+  - 25
+  height: 15
+  radius: 3
+  type: cylinder
+- center:
+  - 10
+  - 15
+  - 25
+  height: 17
+  radius: 4
+  type: cylinder
+- center:
+  - 0
+  - 20
+  - 25
+  height: 13
+  radius: 3
+  type: cylinder
+- center:
+  - -10
+  - 10
+  - 25
+  height: 16
+  radius: 4
+  type: cylinder
+- center:
+  - -20
+  - 0
+  - 25
+  height: 14
+  radius: 3
+  type: cylinder
+start:
+- -30.0
+- -35.0
+- 20.0
+- 0.0
+- 0.0
+- 0.0
+- 1.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+type: PayloadFourDrones

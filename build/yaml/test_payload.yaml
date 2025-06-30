@@ -1,0 +1,24 @@
+environment:
+  name: payloadfourdrones_0
+  robot_type: payloadfourdrones
+  start: [0.0, 0.0, 0.0]
+  goal: [10.0, 0.0, 0.0]
+  time_limit: 10.0
+  delta: 0.1
+  max_steps: 1000
+  min: [-22.0, -53.0, -1.0]
+  max: [88.0, 50.0, 27.0]
+
+robots:
+  - name: drone1
+    start: [0.0, 0.0, 0.0]
+    goal: [10.0, 0.0, 0.0]
+  - name: drone2
+    start: [0.0, 1.0, 0.0]
+    goal: [10.0, 1.0, 0.0]
+  - name: drone3
+    start: [1.0, 0.0, 0.0]
+    goal: [11.0, 0.0, 0.0]
+  - name: drone4
+    start: [1.0, 1.0, 0.0]
+    goal: [11.0, 1.0, 0.0]

@@ -55,7 +55,7 @@ public:
                 droneSO3State->x,
                 droneSO3State->y,
                 droneSO3State->z);
-            droneQuat.normalize(); // Normalize the drone quaternion
+            droneQuat.normalize(); // Normalize the drzone quaternion
 
             if ((droneQuat.x() * droneQuat.x() + droneQuat.y() * droneQuat.y()) > (1 - maxAngleCosDrone) / 2)
             {
@@ -115,7 +115,7 @@ public:
             {
                 double hover = (payloadSystem_->getDroneMass() +
                                 payloadSystem_->getPayloadMass() /
-                                payloadSystem_->getRobotCount()) * 9.81 * 2;
+                                payloadSystem_->getRobotCount()) * 9.81 * 1.05;
         
                 double *vals =
                     control->as<ompl::control::RealVectorControlSpace::ControlType>()->values;

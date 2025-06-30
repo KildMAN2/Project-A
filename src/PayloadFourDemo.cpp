@@ -88,7 +88,7 @@ void payloadSystemDemo(app::PayloadSystem &setup)
     
 
     if (setup.getUseSST()) {
-        auto objective = std::make_shared<ompl::base::PathLengthOptimizationObjective>(si);
+        auto objective = std::make_shared<ompl::base::MechanicalWorkOptimizationObjective>(si);
 
         // Set the optimization objective in the problem definition
         setup.getProblemDefinition()->setOptimizationObjective(objective);
@@ -96,8 +96,8 @@ void payloadSystemDemo(app::PayloadSystem &setup)
         // auto planner = std::make_shared<MySST>(si);
         auto planner = std::make_shared<MySST>(si, &setup);
         planner->setGoalBias(0.05);
-        planner->setSelectionRadius(0.2);  // Adjust for faster convergence
-        planner->setPruningRadius(0.1);    // Helps control sparsity
+        planner->setSelectionRadius(0.1);  // Adjust for faster convergence
+        planner->setPruningRadius(0.05);    // Helps control sparsity
 
         // Attach the problem definition with the optimization objective to the planner
         planner->setProblemDefinition(setup.getProblemDefinition());
@@ -108,7 +108,7 @@ void payloadSystemDemo(app::PayloadSystem &setup)
     else {
         // Set up the planner
         auto planner = std::make_shared<MyRRT>(si);
-        planner->setGoalBias(0.1); // Example: Adjust goal bias
+        planner->setGoalBias(0.05); // Example: Adjust goal bias
         setup.setPlanner(planner);
     }
 
@@ -213,13 +213,16 @@ void payloadSystemDemo(app::PayloadSystem &setup)
     // Solve the planning problem
     if (setup.solve(setup.getSolveTime()))
     {
-        std::cout << "Planning completed successfully.\n";
+        // std::cout << "Planning completed successfully.\n";
 
-        if (!setup.haveExactSolutionPath())
-        {
-            std::cout << "Solution is approximate. Distance to actual goal is "
-                      << setup.getProblemDefinition()->getSolutionDifference() << std::endl;
-        }
+        // if (!setup.haveExactSolutionPath())
+        // {
+        //     std::cout << "Solution is approximate. Distance to actual goal is "
+        //               << setup.getProblemDefinition()->getSolutionDifference() << std::endl;
+        // }
+        double dist = setup.haveExactSolutionPath() ? 0.0
+                    : setup.getProblemDefinition()->getSolutionDifference();
+        std::cout << "RESULT distance=" << dist << '\n';
     }
     else
     {
@@ -229,34 +232,79 @@ void payloadSystemDemo(app::PayloadSystem &setup)
 
 
 
-int main(int argc, char ** /*unused*/)
+int main(int argc, char** argv)
 {
-    app::PayloadSystem multiDrone;
+    ompl::app::PayloadSystem sys;
 
-    std::string meshDir = boost::filesystem::absolute("../src/meshes").string();
-    multiDrone.setMeshPath({boost::filesystem::path(meshDir)});
-    multiDrone.setEnvironmentMesh(meshDir + "/env_4.dae");
-    multiDrone.setRobotMesh(meshDir + "/box_collision.dae");
-
-    // multiDrone.getSpaceInformation()->setup();   // builds checker with meshes
-
-    payloadSystemSetup(multiDrone);
-    payloadSystemDemo(multiDrone);
-
-
-    if (!multiDrone.getPrintAllStates())
+    // ---------- parse CLI args: --key value OR --key=value ----------
+    for (int i = 1; i < argc; ++i)
     {
-        // Save solution path to file
-        std::ofstream outFile("solution_path.txt");
-        control::PathControl &path(multiDrone.getSolutionPath());
-        path.printAsMatrix(outFile); // Save the solution matrix to the file
-        outFile.close();
+        std::string arg(argv[i]);
+        if (arg.rfind("--", 0) == 0) // starts with “--”
+        {
+            std::string key = arg.substr(2);  // remove "--"
+            std::string valstr;
+
+            // Support both --key=value and --key value
+            if (auto eq = key.find('='); eq != std::string::npos)
+            {
+                valstr = key.substr(eq + 1);
+                key.erase(eq);
+            }
+            else if (i + 1 < argc)
+            {
+                valstr = argv[++i];
+            }
+            else
+            {
+                std::cerr << "Missing value for " << arg << '\n';
+                return 1;
+            }
+
+            try
+            {
+                double v = std::stod(valstr);
+                if (!sys.setParam(key, v))
+                    std::cerr << "Unknown parameter '" << key << "'\n";
+            }
+            catch (...)
+            {
+                std::cerr << "Bad value '" << valstr << "' for " << key << '\n';
+                return 1;
+            }
+        }
     }
 
-    // system("python3 ../src/python/print_solution.py ../build/solution_path.txt");
+    // Set bounds before any mesh or state setup
+    sys.setDefaultBounds();
 
-    // system("python3 ../src/python/plot_trajectories_four.py");
+    // Load environment meshes
+    std::string meshDir = boost::filesystem::absolute("../src/meshes").string();
+    sys.setMeshPath({boost::filesystem::path(meshDir)});
+    sys.setEnvironmentMesh(meshDir + "/env_4.dae");
+    sys.setRobotMesh      (meshDir + "/box_collision.dae");
 
-    system("python3 ../src/python/extract_se3.py solution_path.txt solution_path_se3.txt");
-    system("python3 ../src/python/ompl_app_multiple.py");
+    // Define start & goal states BEFORE calling setup
+    payloadSystemSetup(sys);
+
+    // Now it's safe to call setup()
+    sys.setup();
+
+    // Run planning demo
+    payloadSystemDemo(sys);
+
+    // Save solution path if not using custom state logging
+    if (!sys.getPrintAllStates())
+    {
+        std::ofstream outFile("solution_path.txt");
+        ompl::control::PathControl &path(sys.getSolutionPath());
+        path.printAsMatrix(outFile);
+    }
+
+    // Optional post-processing scripts
+     system("python3 ../src/python/extract_se3.py solution_path.txt solution_path_se3.txt");
+     system("python3 ../src/python/ompl_app_multiple.py");
+
+    return 0;
 }
+

@@ -18,6 +18,11 @@ unsigned int ompl::app::PayloadSystem::droneCount_ = 4; // Default number of dro
 
 using StepperType = boost::numeric::odeint::runge_kutta_cash_karp54<std::vector<double>>;
 
+/**
+ * @brief Construct a new PayloadSystem object for multi-drone payload transport.
+ * 
+ * Initializes the system, sets up the ODE solver, state propagator, and motion validator.
+ */
 ompl::app::PayloadSystem::PayloadSystem()
     : AppBase<AppType::CONTROL>(constructControlSpace(), Motion_3D), 
       rigidBody_(ompl::app::MotionModel::Motion_3D, ompl::app::CollisionChecker::FCL)
@@ -46,8 +51,8 @@ ompl::app::PayloadSystem::PayloadSystem()
 
     // si_->setStateValidityCheckingResolution(0.001);
 
-    // auto validityChecker = std::make_shared<PayloadSystemValidityChecker>(si_, *this);
-    // si_->setStateValidityChecker(validityChecker);
+     auto validityChecker = std::make_shared<PayloadSystemValidityChecker>(si_, *this);
+     si_->setStateValidityChecker(validityChecker);
 
     auto motionValidator = std::make_shared<ompl::base::DiscreteMotionValidator>(si_);
     si_->setMotionValidator(motionValidator);
@@ -55,6 +60,13 @@ ompl::app::PayloadSystem::PayloadSystem()
     si_->setup();
 }
 
+/**
+ * @brief Get the default start state for the payload system.
+ * 
+ * Returns a default geometric start state for the payload, with position and orientation set.
+ * 
+ * @return ompl::base::ScopedState<> Default start state.
+ */
 ompl::base::ScopedState<> ompl::app::PayloadSystem::getDefaultStartState() const
 {
     base::ScopedState<base::SE3StateSpace> s(getGeometricComponentStateSpace());
@@ -64,7 +76,14 @@ ompl::base::ScopedState<> ompl::app::PayloadSystem::getDefaultStartState() const
     return getFullStateFromGeometricComponent(s);
 }
 
-
+/**
+ * @brief Construct the state space for the payload system.
+ * 
+ * Builds a compound state space including payload SE3, payload velocity, and for each drone:
+ * orientation, velocity, and cable parameters.
+ * 
+ * @return ompl::base::StateSpacePtr The constructed state space.
+ */
 ompl::base::StateSpacePtr ompl::app::PayloadSystem::constructStateSpace()
 {
     auto stateSpace = std::make_shared<base::CompoundStateSpace>();
@@ -73,18 +92,18 @@ ompl::base::StateSpacePtr ompl::app::PayloadSystem::constructStateSpace()
     stateSpace->addSubspace(std::make_shared<base::SE3StateSpace>(), 1.0);
 
     // Add RealVector state space for the payload's velocity (6 dimensions)
-    stateSpace->addSubspace(std::make_shared<base::RealVectorStateSpace>(6), 0.1);
+    stateSpace->addSubspace(std::make_shared<base::RealVectorStateSpace>(6), 0.05);
 
     for (unsigned int i = 0; i < droneCount_; ++i)
     {
         // Add SO3 state space for orientation
-        stateSpace->addSubspace(std::make_shared<base::SO3StateSpace>(), 0.02);
+        stateSpace->addSubspace(std::make_shared<base::SO3StateSpace>(), 0.05);
 
         // Add RealVector state space for velocity (3 dimensions)
-        stateSpace->addSubspace(std::make_shared<base::RealVectorStateSpace>(3), 0.02);
+        stateSpace->addSubspace(std::make_shared<base::RealVectorStateSpace>(3), 0.05);
 
         // Add RealVector state space for cable angles and velocities (4 dimensions)
-        stateSpace->addSubspace(std::make_shared<base::RealVectorStateSpace>(4), 0.02);
+        stateSpace->addSubspace(std::make_shared<base::RealVectorStateSpace>(4), 0.05);
     }
 
     stateSpace->lock();
@@ -92,8 +111,31 @@ ompl::base::StateSpacePtr ompl::app::PayloadSystem::constructStateSpace()
     return stateSpace;
 }
 
+/**
+ * @brief Construct the control space for the payload system.
+ * 
+ * Builds a real vector control space with 4 controls per drone (thrust and torques),
+ * and sets appropriate bounds for each control dimension.
+ * 
+ * @return ompl::control::ControlSpacePtr The constructed control space.
+ */
 ompl::control::ControlSpacePtr ompl::app::PayloadSystem::constructControlSpace()
 {
+    // Ensure all control bounds parameters are valid before setting bounds
+    if (minThrust >= maxThrust) {
+        std::cerr << "[ERROR] minThrust >= maxThrust (" << minThrust << ", " << maxThrust << "). Overriding to minThrust=0, maxThrust=20." << std::endl;
+        minThrust = 0;
+        maxThrust = 20;
+    }
+    if (maxTorquePitchRoll <= 0) {
+        std::cerr << "[ERROR] maxTorquePitchRoll <= 0 (" << maxTorquePitchRoll << "). Overriding to 1." << std::endl;
+        maxTorquePitchRoll = 1;
+    }
+    if (maxTorqueYaw <= 0) {
+        std::cerr << "[ERROR] maxTorqueYaw <= 0 (" << maxTorqueYaw << "). Overriding to 1." << std::endl;
+        maxTorqueYaw = 1;
+    }
+
     // Construct a control space with dimensions equal to 4 times the number of drones
     auto controlSpace = std::make_shared<ompl::control::RealVectorControlSpace>(constructStateSpace(), droneCount_ * 4);
 
@@ -126,6 +168,16 @@ ompl::control::ControlSpacePtr ompl::app::PayloadSystem::constructControlSpace()
     return controlSpace;
 }
 
+/**
+ * @brief Defines the system's ODE (dynamics) for integration.
+ * 
+ * Computes the time derivative of the state (qdot) given the current state and control input.
+ * Handles payload and drone dynamics, including forces, torques, and cable effects.
+ * 
+ * @param q Current state vector.
+ * @param ctrl Control input.
+ * @param qdot Output: time derivative of the state.
+ */
 void ompl::app::PayloadSystem::ode(const control::ODESolver::StateType &q, const control::Control *ctrl, control::ODESolver::StateType &qdot)
 {
 
@@ -257,6 +309,17 @@ void ompl::app::PayloadSystem::ode(const control::ODESolver::StateType &q, const
     qdot[12] = payloadAngAccel.z();
 }
 
+/**
+ * @brief Post-processes the state after propagation.
+ * 
+ * Enforces bounds and normalization on the state components (quaternions, velocities, cable angles).
+ * Ensures all state variables remain within valid ranges after integration.
+ * 
+ * @param state Previous state (not used).
+ * @param control Control input.
+ * @param duration Duration of propagation (not used).
+ * @param result State to be post-processed.
+ */
 void ompl::app::PayloadSystem::postPropagate(const base::State * /*state*/, const control::Control *control, const double /*duration*/, base::State *result)
 {   
     // Access the CompoundStateSpace and subspaces
@@ -299,30 +362,60 @@ void ompl::app::PayloadSystem::postPropagate(const base::State * /*state*/, cons
 
         // Normalize phi (cable elevation angle)
         double &phi = cableState->values[1]; // Assuming cable angles are stored as theta = [0], phi = [1]
+        // Wrap phi to [0, 2*pi)
         while (phi < 0)
-            phi += 2 * M_PI; // Add 2π until phi is positive
-        while (phi > 2 * M_PI)
-            phi -= 2 * M_PI; // Subtract 2π until phi is within range
+            phi += 2 * M_PI;
+        while (phi >= 2 * M_PI)
+            phi -= 2 * M_PI;
     }
 }
 
+/**
+ * @brief Set default bounds for all state variables in the payload system.
+ * 
+ * Sets position, velocity, and cable parameter bounds for the payload and all drones.
+ * Ensures the state space is properly constrained for planning.
+ */
 void ompl::app::PayloadSystem::setDefaultBounds()
 {
+    // Ensure all bounds parameters are positive for valid RealVectorBounds
+    if (maxPayloadVel <= 0) {
+        std::cerr << "[ERROR] maxPayloadVel <= 0 (" << maxPayloadVel << "). Overriding to 10 for valid bounds." << std::endl;
+        maxPayloadVel = 10;
+    }
+    if (maxPayloadAngVel <= 0) {
+        std::cerr << "[ERROR] maxPayloadAngVel <= 0 (" << maxPayloadAngVel << "). Overriding to 10 for valid bounds." << std::endl;
+        maxPayloadAngVel = 10;
+    }
+    if (maxDroneVel <= 0) {
+        std::cerr << "[ERROR] maxDroneVel <= 0 (" << maxDroneVel << "). Overriding to 10 for valid bounds." << std::endl;
+        maxDroneVel = 10;
+    }
+    if (maxTheta <= 0) {
+        std::cerr << "[ERROR] maxTheta <= 0 (" << maxTheta << "). Overriding to 10 degrees for valid bounds." << std::endl;
+        maxTheta = 10;
+    }
+    if (maxThetaVel <= 0) {
+        std::cerr << "[ERROR] maxThetaVel <= 0 (" << maxThetaVel << "). Overriding to 10 for valid bounds." << std::endl;
+        maxThetaVel = 10;
+    }
+
     // Enforce payload position bounds (-300, 600) for x, y, z
     base::RealVectorBounds positionBounds(3); // SE3 position bounds
-    positionBounds.setLow(0, -11); // x lower bound
-    positionBounds.setHigh(0, 11); // x upper bound
-    positionBounds.setLow(1, -11); // y lower bound
-    positionBounds.setHigh(1, 11); // y upper bound
+    positionBounds.setLow(0, -22); // x lower bound
+    positionBounds.setHigh(0, 88); // x upper bound
+    positionBounds.setLow(1, -53); // y lower bound
+    positionBounds.setHigh(1, 50); // y upper bound
     positionBounds.setLow(2, -1); // z lower bound
-    positionBounds.setHigh(2, 28); // z upper bound
+    positionBounds.setHigh(2, 27); // z upper bound
     getStateSpace()->as<base::CompoundStateSpace>()->as<base::SE3StateSpace>(0)->setBounds(positionBounds);
 
     // Enforce payload velocity bounds (-10, 10) for x, y, z, and angular velocities
-    base::RealVectorBounds velocityBounds(6); // Bounds for payload velocity (linear and angular)
-    velocityBounds.setLow(-maxPayloadVel);
-    velocityBounds.setHigh(maxPayloadVel);
-    getStateSpace()->as<base::CompoundStateSpace>()->as<base::RealVectorStateSpace>(1)->setBounds(velocityBounds);
+    base::RealVectorBounds velBounds(6);
+    for(unsigned i=0;i<3;++i){velBounds.setLow(i,-maxPayloadVel);velBounds.setHigh(i,maxPayloadVel);}
+    for(unsigned i=3;i<6;++i){velBounds.setLow(i,-maxPayloadAngVel);velBounds.setHigh(i,maxPayloadAngVel);}
+    getStateSpace()->as<base::CompoundStateSpace>()->as<base::RealVectorStateSpace>(1)->setBounds(velBounds);
+    
 
     // Loop through each drone and enforce bounds
     for (unsigned int i = 0; i < droneCount_; ++i)
@@ -347,5 +440,3 @@ void ompl::app::PayloadSystem::setDefaultBounds()
         getStateSpace()->as<base::CompoundStateSpace>()->as<base::RealVectorStateSpace>(4 + i * 3)->setBounds(cableAngleBounds);
     }
 }
-
-

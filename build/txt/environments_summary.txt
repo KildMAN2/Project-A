@@ -1,0 +1,38 @@
+# Test Environments Summary
+==================================================
+
+Available Test Environments:
+
+• open_simple        - Simple open space - baseline test
+  Config: /home/user_136/Desktop/Project-A/build/env_open_simple.yaml
+
+• open_long          - Long distance traversal - endurance test
+  Config: /home/user_136/Desktop/Project-A/build/env_open_long.yaml
+
+• sparse_obstacles   - Few scattered obstacles - basic navigation
+  Config: /home/user_136/Desktop/Project-A/build/env_sparse_obstacles.yaml
+
+• dense_obstacles    - Many obstacles - complex navigation
+  Config: /home/user_136/Desktop/Project-A/build/env_dense_obstacles.yaml
+
+• corridor           - Narrow corridor - precision navigation
+  Config: /home/user_136/Desktop/Project-A/build/env_corridor.yaml
+
+• multi_level        - Multi-altitude - 3D navigation
+  Config: /home/user_136/Desktop/Project-A/build/env_multi_level.yaml
+
+• maze               - Maze-like structure - planning challenge
+  Config: /home/user_136/Desktop/Project-A/build/env_maze.yaml
+
+• extreme            - Maximum complexity - stress test
+  Config: /home/user_136/Desktop/Project-A/build/env_extreme.yaml
+
+Usage:
+------
+1. Select environment configuration
+2. Run OMPL planner with the config
+3. Optimize resulting trajectory
+
+Example:
+  ./PayloadFourDrones --config env_sparse_obstacles.yaml
+  python3 trajectory_optimizer.py --input solution.txt
